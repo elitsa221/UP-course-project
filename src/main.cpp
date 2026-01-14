@@ -12,6 +12,16 @@
 * main file
 *
 */
+#include <iostream>
+#include <fstream>
+#include <random>
+#include <algorithm>
+using namespace std;
+const int DECK_SIZE = 108;
+const int MAX_HAND = 30;
+const int MAX_DISCARD = DECK_SIZE;
+const char* SAVE_FILE = "uno_game.txt";
+mt19937 randomGenerator(std :: random_device{}());
 
 int main() {
 	return 0;
