@@ -31,7 +31,34 @@ bool clockwise = true;
 int currentPlayer = 0;
 int drawPenalty = 0;
 bool saidUno = false;
-
+int getColor(int card){
+	if(card >=104) return 4;
+	return card /26;
+}
+int getNumber(int card){
+	if(card >=104)return -1;
+	int pos = card % 26;
+	if(pos ==0)return 0;
+	if(pos <=18)return ((pos-1)/2)+1;
+	return -1;
+}
+int getType(int card){
+	if(card>=104){
+		return (card % 2 ==0 )?4:5;
+	}
+	int pos = card % 26;
+    if (pos <= 18) return 0;              
+    if (pos == 19 || pos == 20) return 1; 
+    if (pos == 21 || pos == 22) return 2;
+    if (pos == 23 || pos == 24) return 3; 
+	return 0;
+}
+bool isWildCard(int card) {
+    return card >= 104;
+}
+bool isWildDrawFour(int card) {
+    return card >= 104 && (card % 2 == 1);
+}
 int main() {
 	return 0;
 }
