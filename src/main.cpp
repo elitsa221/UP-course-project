@@ -268,6 +268,20 @@ bool loadGame(){
     cout << "Game loaded.\n";
     return true;
 }
+void newGame(){
+	Deck();
+	playerCount = discardCount = 0;
+	drawPenalty =0;
+	clockwise =true;
+	saidUno = false;
+	currentColor = 4;
+	for(int i = 0;i <7;++i){
+		playerHand[playerCount++] = drawOne();		
+	}
+	discardPile[discardCount++] = drawOne();
+	currentColor = getColor(discardPile[0]);
+	cout <<"New game started!\n";
+}
 int main() {
 	return 0;
 }
