@@ -255,6 +255,19 @@ bool saveGame(){
 	cout << "Game saved.\n";
 	return true;
 }
+bool loadGame(){
+	ifstream f(SAVE_FILE);
+    if (!f) return false;
+    f >> drawPenalty >> currentColor >> clockwise >> saidUno;
+    f >> playerCount;
+    for (int i = 0; i < playerCount; ++i) f >> playerHand[i];
+    f >> discardCount;
+    for (int i  = 0; i  < discardCount; ++i) f >> discardPile[i];
+    f >> drawPileCount;
+    for (int i= 0; i < drawPileCount; ++i) f >> drawPile[i];
+    cout << "Game loaded.\n";
+    return true;
+}
 int main() {
 	return 0;
 }
