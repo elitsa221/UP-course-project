@@ -124,6 +124,22 @@ bool canPlay(int card, int top){
 	if(getType(card) == 0 && getType(top) == 0 && getNumber(card) == getNumber(top))return true;
 	if(getType(card) == getType(top) && getType(top) != 0)return true;
 }
+void printHand(){
+	cout <<"Your cards:\n";
+	for(int i = 0;i< playerCount;++i){
+		cout << "[" << i << "]"<< getShort(playerHand[i])<< " ";
+		if((i+1))% 6 == 0) cout << "\n";
+	}
+	cout << "\n";
+}
+void printTop(){
+	if(discardCount == 0){
+		cout << "No top card yet\n";
+		return;
+	}
+	cout << "Current card: "<< getShort(discardPile[discardCount-1])<<"\n";
+	cout << "Color to match: "<< getColorName(currentColor) << "\n\n";
+}
 int main() {
 	return 0;
 }
