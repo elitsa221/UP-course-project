@@ -242,7 +242,19 @@ bool gameOver(){
 	}
 	return false;
 }
-
+bool saveGame(){
+	ofstream f(SAVE_FILE);
+	if(!f)return false;
+	f << drawPenalty << " "<< currentColor << " "<< clockwise << " "<< saidUno;
+	f << playerCount << "\n";
+	for(int i  = 0; i < playerCount;++i)f << playerHand[i]<< "\n";
+	f << discardCount << "\n";
+	for(int i = 0;i <discardCount;++i)f << discardPile[i]<< "\n";
+	f << drawPileCount << "\n";
+	for(int i =0;i< drawPileCount;++i)f << drawPile[i]<< "\n";
+	cout << "Game saved.\n";
+	return true;
+}
 int main() {
 	return 0;
 }
