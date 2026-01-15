@@ -207,7 +207,6 @@ if(playerCount == 0 && !saidUno){
 }
 saidUno =false;
 bool skipNext = false;
-
     if (isWildCard(chosen)) {
         cout << "Choose new color (r/g/b/y): ";
         char ch; cin >> ch; cin.ignore();
@@ -234,7 +233,16 @@ bool skipNext = false;
         drawPenalty = 4;
         skipNext = true;
         cout << "Wild +4 penalty on yourself!\n";
-    }
+	}
+bool gameOver(){
+	if(playerCount == 0){
+		cout << "\n*** YOU WIN! ***\n";
+		cout << "All cards played!\n";
+		return true;
+	}
+	return false;
+}
+
 int main() {
 	return 0;
 }
