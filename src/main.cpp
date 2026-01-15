@@ -140,6 +140,101 @@ void printTop(){
 	cout << "Current card: "<< getShort(discardPile[discardCount-1])<<"\n";
 	cout << "Color to match: "<< getColorName(currentColor) << "\n\n";
 }
+void playerTurn(){
+	if(drawPenalty > 0){
+		cout <<"You must draw "<< drawPenalty<< " cards (penalty).\n";
+		for(int i = 0; i <drawPenalty && playerCount < MAX_HAND;++i)
+		{
+			playerHAND[PlayerCount++] = drawOne();
+
+		}
+		drawPenalty = 0;
+		return;
+	}
+	printTop();
+	printHand();
+	if(playerCount == 1  && !saidUno){
+		cout <<"You have ONE card left! Type 'uno' before playing!\n";
+	}
+	cout <<"Enter index to play, 'draw' or 'uno'";
+	string input;
+	getline(cin >> ws, input);
+	if(input == "uno"){
+		if(playerCount == 1){
+			saidUno = true;
+			cout << "UNO called!\n";
+		}
+		else {
+			cout << "You don't have 1 card - ignored.\n";
+		}
+		playerTurn();
+		return;
+	}
+	if(input = "draw"){
+		int draw = drawOne();
+		if(drawn >=0 ){
+			cout <<"You drew: "<<getShort(drawn)<< "\n";
+			if(playerCount <MAX_HAND)playerHand[playerCount++] = drawn;
+		}
+		return;
+	}
+	int idx = -1;
+	if(idx < 0 || idx >=playerCount){
+		cout <<"Invalid choice - draw 1 card penalty\n";
+		if(plyerCount<MAX_HAND)playerHand[playerCount++] = drawOne();
+		return;
+	}
+	int chosen = playerand[idx];
+	if(!canPlay(chosen, discardPile[discardCount-1])){
+		cout << "Illegal card- draw 1 card penalty\n";
+		if(playerCount<MAX_HAND)playerHand[playerCount++] = drawOne();
+		return;
+	}
+}
+discardPile[discardCount++] = chosen;
+for(int j = idx; i < playerCount -1 ;++j){
+	playerHand[j] = playerHand[j+1];
+
+}playerCount--;
+cout << "You played: " << getShort(chosen)<< "\n";
+if(playerCount == 0 && !saidUno){
+	cout << "You forgot to say UNO! Draw 2 penalty cards.\n";
+	if(playerCount +2 <= MAX_HAND){
+		playerHand[playerCount++] = drawOne();
+		playerHand[playerCount++] = drawOne();
+
+	}
+}
+saidUno =false;
+bool skipNext = false;
+
+    if (isWildCard(chosen)) {
+        cout << "Choose new color (r/g/b/y): ";
+        char ch; cin >> ch; cin.ignore();
+        ch = tolower(ch);
+        if (ch == 'r') currentColor = 0;
+        else if (ch == 'g') currentColor = 1;
+        else if (ch == 'b') currentColor = 2;
+        else if (ch == 'y') currentColor = 3;
+        else currentColor = rng() % 4;
+        cout << "Color is now " << getColorName(currentColor) << "\n";
+    }
+    int typ = getType(chosen);
+    if (typ == 1) { 
+        skipNext = true;
+        cout << "Skip! (your turn again)\n";
+    } else if (typ == 2) { 
+        clockwise = !clockwise;
+        cout << "Reverse!\n";      
+    } else if (typ == 3) { 
+        drawPenalty = 2;
+        skipNext = true;
+        cout << "+2 penalty on yourself!\n";
+    } else if (typ == 5) { 
+        drawPenalty = 4;
+        skipNext = true;
+        cout << "Wild +4 penalty on yourself!\n";
+    }
 int main() {
 	return 0;
 }
