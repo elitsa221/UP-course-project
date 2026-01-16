@@ -13,6 +13,9 @@
 *
 */
 #define _CRT_SECURE_NO_WARNINGS
+#ifdef _WIN32
+#include <windows.h>
+#endif
 #include <iostream>
 #include <fstream>
 #include <random>
@@ -55,10 +58,17 @@ bool isWildCard(const Card& c) {
 bool isWildDrawFour(const Card& c) {
     return c.color == 4 && c.type == 5;
 }
-const char* getShort(const Card& c){
-	static char s[8];
+const char* getShort(const Card& c){	
+	static char s[32]; 
 	const char* colors = "RGBYW";
-	snprintf(s,sizeof(s),"%c",colors[c.color]);
+	const char* reset = "\033[0m";
+	const char* code = "";
+	if (c.color == 0) code = "\033[31m";      
+	else if (c.color == 1) code = "\033[32m"; 
+	else if (c.color == 2) code = "\033[34m"; 
+	else if (c.color == 3) code = "\033[33m";
+	else code = "\033[35m";
+	snprintf(s,sizeof(s),"%s%c",code, colors[c.color]);
 	if(c.type == 0){
 		if(c.value >= 0 && c.value <=9){
 			char tmp[4];
@@ -76,22 +86,23 @@ const char* getShort(const Card& c){
 		strncat(s,"+2",sizeof(s) - strlen(s) -1);
 	}
 	else if(c.type == 4){
-		strcpy(s,"WW");
+		snprintf(s, sizeof(s), "%sWW", code);
 	}
 	else if(c.type == 5){
-		strcpy(s,"W+4");
+		snprintf(s, sizeof(s), "%sW+4", code);
 	}
 	else{
 		strcpy(s,"??");
 	}
+	strncat(s,reset,sizeof(s) - strlen(s) -1);
 	return s;	
 }
 const char* getColorName(int col){
 	const  char* names[] = {"Red", "Green", "Blue", "Yellow", "Wild"};
 	return names[col];
 }
-void Deck(){
-	drawPileCount = 0;
+void Deck() {
+        drawPileCount = 0;
         for (int i = 0; i < DECK_SIZE; ++i) {
             Card c;
             c.color = (i >= 104) ? 4 : i / 26;
@@ -107,7 +118,7 @@ void Deck(){
             drawPile[drawPileCount++] = c;
         }
         shuffle(drawPile, drawPile + DECK_SIZE, randomGenerator);
-}
+    }
 Card drawOne(){
 	if(drawPileCount == 0){
 		if(discardCount <=1){
@@ -193,8 +204,7 @@ void playerTurn()
 		cout <<"Invalid choice - draw 1 card penalty\n";
 		if(playerCount<MAX_HAND)playerHand[playerCount++] = drawOne();
 		return;
-	}
-	
+	}	
 	Card chosen = playerHand[idx];
 	if(!canPlay(chosen, discardPile[discardCount-1])){
 		cout << "Illegal card- draw 1 card penalty\n";
@@ -321,6 +331,13 @@ void gameLoop(){
 	}
 }
 int main() {
+	#ifdef _WIN32
+	HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+	DWORD dwMode = 0;
+	GetConsoleMode(hOut, &dwMode);
+	dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+	SetConsoleMode(hOut, dwMode);
+#endif
 	cout << "--- UNO Game ---\n";
 	while(true){
 		cout << "1.New game\n2.Continue Saved Game\n3.Save & Exit\n4.Exit\n";
