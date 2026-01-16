@@ -1,17 +1,9 @@
-# Build folders
 Debug/
 Release/
 x64/
 x86/
-
-# Visual Studio files
 .vs/
 *.vcxproj.user
 *.suo
-
-# Executables
 *.exe
 *.out
-
-# Save files / logs
-*.txt
