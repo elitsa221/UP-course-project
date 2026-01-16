@@ -16,7 +16,7 @@
 #include <fstream>
 #include <random>
 #include <algorithm>
-#include <cstdio>
+#include <cstring>
 #include <cstdlib>
 using namespace std;
 const int DECK_SIZE = 108;
@@ -35,7 +35,7 @@ struct Card{
 	int color;
 	int type;
 	int value;
-}
+};
 Card drawPile[DECK_SIZE];
 Card discardPile[MAX_DISCARD];
 Card playerHand[MAX_HAND];
@@ -123,11 +123,12 @@ Card drawOne(){
 	cout <<"Deck reshuffled from discard pile.\n";}
 	return drawPile[--drawPileCount];
 }
-bool canPlay(const Card& card, const Card& top**){
+bool canPlay(const Card& card, const Card& top){
 	if(isWildCard(card))return true;
 	if(getColor(card) == currentColor)return true;
 	if(getType(card) == 0 && getType(top) == 0 && getNumber(card) == getNumber(top))return true;
 	if(getType(card) == getType(top) && getType(top) != 0)return true;
+	return false;
 }
 void printHand(){
 	cout <<"Your cards:\n";
@@ -182,13 +183,14 @@ void playerTurn()
 		if(playerCount <MAX_HAND)playerHand[playerCount++] = drawn;		
 		return;
 	}
-	int idx = -1;	
+	int idx = -1;
+	try { idx = atoi(input); } catch (...) { idx = -1; }	
 	if(idx < 0 || idx >=playerCount){
 		cout <<"Invalid choice - draw 1 card penalty\n";
 		if(playerCount<MAX_HAND)playerHand[playerCount++] = drawOne();
 		return;
 	}
-	try { idx = atoi(input); } catch (...) { idx = -1; }
+	
 	Card chosen = playerHand[idx];
 	if(!canPlay(chosen, discardPile[discardCount-1])){
 		cout << "Illegal card- draw 1 card penalty\n";
