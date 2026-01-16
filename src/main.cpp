@@ -12,6 +12,7 @@
 * main file
 *
 */
+#define _CRT_SECURE_NO_WARNINGS
 #include <iostream>
 #include <fstream>
 #include <random>
@@ -91,18 +92,21 @@ const char* getColorName(int col){
 }
 void Deck(){
 	drawPileCount = 0;
-    for(int i = 0; i < DECK_SIZE; ++i){
-		Card c;
-		c.color = (i>= 104)?4 :i /26;
-		c.type = (i >= 104) ? -1 : (i % 26 == 0 ? 0 : (i % 26 <= 18 ? ((i % 26 - 1)/2) + 1 : -1));
-		c.value = (i >= 104) ? ((i % 2 == 0) ? 4 : 5) : 
-                 ((i % 26 <= 18) ? 0 :
-                  (i % 26 == 19 || i % 26 == 20) ? 1 :
-                  (i % 26 == 21 || i % 26 == 22) ? 2 :
-                  (i % 26 == 23 || i % 26 == 24) ? 3 : 0);
-		drawPile[drawPileCount++] = c;
-	}
-	shuffle(drawPile, drawPile + DECK_SIZE, randomGenerator);
+        for (int i = 0; i < DECK_SIZE; ++i) {
+            Card c;
+            c.color = (i >= 104) ? 4 : i / 26;
+            if (i >= 104) {
+                c.type = (i % 2 == 0) ? 4 : 5;
+                c.value = (c.type == 5) ? 4 : 0;
+            }
+            else {
+                int localIdx = i % 26;
+                c.type = (localIdx <= 18) ? 0 : (localIdx <= 20 ? 1 : (localIdx <= 22 ? 2 : 3));
+                c.value = (c.type == 0) ? (localIdx == 0 ? 0 : (localIdx + 1) / 2) : 20;
+            }
+            drawPile[drawPileCount++] = c;
+        }
+        shuffle(drawPile, drawPile + DECK_SIZE, randomGenerator);
 }
 Card drawOne(){
 	if(drawPileCount == 0){
@@ -198,6 +202,7 @@ void playerTurn()
 		return;
 		
 	}
+	currentColor = chosen.color;
 	discardPile[discardCount++] = chosen;
 	for(int j = idx; j < playerCount -1 ;++j)
 		{
