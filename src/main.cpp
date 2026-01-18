@@ -207,9 +207,14 @@ void playerTurn()
 	if (count == 1 && !unoFlag) {
 		cout << "You have ONE card left! Type 'uno' before playing!\n";
 	}
-	cout << "Enter index to play, 'draw' or 'uno'";
+	cout << "Enter index to play:'draw', 'uno' or 'save'";
 	char input[32];
 	cin.getline(input, sizeof(input));
+	if (strcmp(input, "save") == 0) {
+    saveGame();
+    cout << "Game saved. Continuing...\n";
+    return;
+	}
 	if (strcmp(input, "uno") == 0) {
 		if (count == 1) {
 			unoFlag = true;
