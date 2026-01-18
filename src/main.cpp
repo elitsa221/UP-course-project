@@ -12,134 +12,137 @@
 * main file
 *
 */
-#define _CRT_SECURE_NO_WARNINGS
-#ifdef _WIN32
-#include <windows.h>
-#endif
 
 #include <iostream>
 #include <fstream>
 #include <random>
 #include <algorithm>
-#include <cstring>
 #include <cstdlib>
-
 using namespace std;
 const int DECK_SIZE = 108;
 bool saveGame(const char* filename);
 const int MAX_HAND = 30;
 const int MAX_DISCARD = DECK_SIZE;
-const char* SAVE_FILE = "uno_game.txt";
 mt19937 randomGenerator(std::random_device{}());
-int drawPileCount = 0;
-int discardCount = 0;
-int playerCount = 0;
-int currentColor = 4;
-bool clockwise = true;
-int drawPenalty = 0;
-//
-int currentPlayer = 0;
-int player2Count = 0;
-bool saidUno2 = false;
-bool saidUno = false;
+
 struct Card {
 	int color;
 	int type;
 	int value;
 };
-Card drawPile[DECK_SIZE];
-Card discardPile[MAX_DISCARD];
-Card playerHand[MAX_HAND];
-//
-Card player2Hand[MAX_HAND];
+
+int myStrLen(const char* s) {
+    int len = 0;
+    while (s[len] != '\0') {
+        len++;
+    }
+    return len;
+}
+
+void myStrCopy(char* dest, const char* src) {
+    int i = 0;
+    while (src[i] != '\0') {
+        dest[i] = src[i];
+        i++;
+    }
+    dest[i] = '\0';
+}
+
+bool myStrEqual(const char* a, const char* b) {
+    int i = 0;
+    while (a[i] != '\0' && b[i] != '\0') {
+        if (a[i] != b[i]) {
+            return false;
+        }
+        i++;
+    }
+    return a[i] == b[i];
+}
+
+bool strIsDigit(const char* s) {
+    for (int i = 0; s[i]; ++i)
+        if (s[i] < '0' || s[i] > '9') return false;
+    return true;
+}
+
 int getColor(const Card& c) {
 	return c.color;
 }
+
 int getNumber(const Card& c) {
 	return c.value;
 }
+
 int getType(const Card& c) {
 	return c.type;
 }
+
 bool isWildCard(const Card& c) {
 	return c.color == 4;
 }
+
 bool isWildDrawFour(const Card& c) {
 	return c.color == 4 && c.type == 5;
 }
-const char* getShort(const Card& c) {
-	static char s[32]; 
-	const char* colors = "RGBYW";
-	const char* reset = "\033[0m";
-	const char* code = "";
 
+void getShort(const Card& c, char* out) {
+    int pos = 0;
 
-	if (c.color == 0) code = "\033[31m";      
-	else if (c.color == 1) code = "\033[32m"; 
-	else if (c.color == 2) code = "\033[34m"; 
-	else if (c.color == 3) code = "\033[33m";
-	else code = "\033[35m";                  
+    char colors[] = { 'R', 'G', 'B', 'Y', 'W' };
+    out[pos++] = colors[c.color];
+    
+    if (c.type == 0) {
+        out[pos++] = '0' + c.value;
+    }
+    else if (c.type == 1) {
+        out[pos++] = 'S';
+    }
+    else if (c.type == 2) {
+        out[pos++] = 'R';
+    }
+    else if (c.type == 3) {
+        out[pos++] = '+';
+        out[pos++] = '2';
+    }
+    else if (c.type == 4) {
+        out[pos++] = 'W';
+    }
+    else if (c.type == 5) {
+        out[pos++] = 'W';
+        out[pos++] = '+';
+        out[pos++] = '4';
+    }
 
-
-	snprintf(s, sizeof(s), "%s%c", code, colors[c.color]);
-
-	if (c.type == 0) {
-		if (c.value >= 0 && c.value <= 9) {
-			char tmp[4];
-			snprintf(tmp, sizeof(tmp), "%d", c.value);
-			strncat(s, tmp, sizeof(s) - strlen(s) - 1);
-		}
-	}
-	else if (c.type == 1) {
-		strncat(s, "S", sizeof(s) - strlen(s) - 1);
-	}
-	else if (c.type == 2) {
-		strncat(s, "R", sizeof(s) - strlen(s) - 1);
-	}
-	else if (c.type == 3) {
-		strncat(s, "+2", sizeof(s) - strlen(s) - 1);
-	}
-	else if (c.type == 4) {
-		snprintf(s, sizeof(s), "%sWW", code);
-	}
-	else if (c.type == 5) {
-		snprintf(s, sizeof(s), "%sW+4", code);
-	}
-	else {
-		strcpy(s, "??");
-	}
-
-
-	strncat(s, reset, sizeof(s) - strlen(s) - 1);
-
-	return s;
-
+    out[pos] = '\0';
 }
+
 const char* getColorName(int col) {
 	const  char* names[] = { "Red", "Green", "Blue", "Yellow", "Wild" };
 	return names[col];
 }
 
-	void Deck() {
-		drawPileCount = 0;
-		for (int i = 0; i < DECK_SIZE; ++i) {
-			Card c;
-			c.color = (i >= 104) ? 4 : i / 26;
-			if (i >= 104) {
-				c.type = (i % 2 == 0) ? 4 : 5;
-				c.value = (c.type == 5) ? 4 : 0;
-			}
-			else {
-				int localIdx = i % 26;
-				c.type = (localIdx <= 18) ? 0 : (localIdx <= 20 ? 1 : (localIdx <= 22 ? 2 : 3));
-				c.value = (c.type == 0) ? (localIdx == 0 ? 0 : (localIdx + 1) / 2) : 20;
-			}
-			drawPile[drawPileCount++] = c;
+void createDeck(Card drawPile[], int& drawPileCount, mt19937& randomGenerator) {
+	drawPileCount = 0;
+	for (int i = 0; i < DECK_SIZE; ++i) {
+	Card c;
+	c.color = (i >= 104) ? 4 : i / 26;
+	if (i >= 104) {
+		c.type = (i % 2 == 0) ? 4 : 5;
+		c.value = (c.type == 5) ? 4 : 0;
 		}
-		shuffle(drawPile, drawPile + DECK_SIZE, randomGenerator);
+		else {
+			int localIdx = i % 26;
+			c.type = (localIdx <= 18) ? 0 : (localIdx <= 20 ? 1 : (localIdx <= 22 ? 2 : 3));
+			c.value = (c.type == 0) ? (localIdx == 0 ? 0 : (localIdx + 1) / 2) : 20;
+		}
+		drawPile[drawPileCount++] = c;
 	}
+	shuffle(drawPile, drawPile + DECK_SIZE, randomGenerator);
+}	
 
-Card drawOne() {
+Card drawOne(Card drawPile[], int& drawPileCount,
+             Card discardPile[], int& discardCount,
+             mt19937& randomGenerator) {
 	if (drawPileCount == 0) {
 		if (discardCount <= 1) {
 			cout << "No cards left to draw!\n";
@@ -159,6 +162,7 @@ Card drawOne() {
 	}
 	return drawPile[--drawPileCount];
 }
+
 bool canPlay(const Card& card, const Card& top) {
 	if (isWildCard(card))return true;
 	if (getColor(card) == currentColor)return true;
@@ -166,19 +170,20 @@ bool canPlay(const Card& card, const Card& top) {
 	if (getType(card) == getType(top) && getType(top) != 0)return true;
 	return false;
 }
+
 void printHand() {
 	const char* title = (currentPlayer == 0) ? "Player 1 cards:" : "Player 2 cards:";
     Card* hand = (currentPlayer == 0) ? playerHand : player2Hand;
     int count = (currentPlayer == 0) ? playerCount : player2Count;
-    cout << title << "\n";
-	//cout << "Your cards:\n";
+    cout << title << "\n";	
 	for (int i = 0;i < count;++i) {
 		cout << "[" << i << "]" << getShort(hand[i]) << " ";
 		if ((i + 1) % 6 == 0) cout << "\n";
 	}
 	cout << "\n";
 }
-void printTop() {
+
+void printTop(Card discardPile[], int discardCount, int currentColor) {
 	if (discardCount == 0) {
 		cout << "No top card yet\n";
 		return;
@@ -186,146 +191,12 @@ void printTop() {
 	cout << "Current card: " << getShort(discardPile[discardCount - 1]) << "\n";
 	cout << "Color to match: " << getColorName(currentColor) << "\n\n";
 }
-void playerTurn()
-{	
-	Card* hand = (currentPlayer == 0) ? playerHand : player2Hand;
-	int& count = (currentPlayer == 0) ? playerCount : player2Count;
-	bool& unoFlag = (currentPlayer == 0) ? saidUno : saidUno2;
-	cout << "\n--- Player " << (currentPlayer + 1) << "'s turn ---\n";
-	if (drawPenalty > 0) {
-		cout << "You must draw " << drawPenalty << " cards (penalty).\n";
-		for (int i = 0; i < drawPenalty && count < MAX_HAND;++i)
-		{
-			hand[count++] = drawOne();
 
-		}
-		drawPenalty = 0;
-		currentPlayer = 1 - currentPlayer;
-		return;
-	}
-	printTop();
-	printHand();
-	if (count == 1 && !unoFlag) {
-		cout << "You have ONE card left! Type 'uno' before playing!\n";
-	}
-	cout << "Enter index to play:'draw', 'uno', 'save' or 'exit'";
-	char input[32];
-	cin.getline(input, sizeof(input));
-	if (strcmp(input, "exit") == 0) {
-		char saveName[128];
-		cout << "Enter save filename: ";
-		cin.getline(saveName, 128);
-		saveGame(saveName);
-		cout << "Game saved. Exiting...\n";
-		exit(0);}
-	if (strcmp(input, "save") == 0) {
-		char saveName[128];
-		cout << "Enter save filename: ";
-		cin.getline(saveName, 128);
-		saveGame(saveName);
-		cout << "Game saved. Continuing...\n";
-		playerTurn();
-		return;
-	}
-	if (strcmp(input, "uno") == 0) {
-		if (count == 1) {
-			unoFlag = true;
-			cout << "UNO called!\n";
-		}
-		else {
-			cout << "You don't have 1 card - ignored.\n";
-		}
-		playerTurn();
-		return;
-	}
-	if (strcmp(input, "draw") == 0)
-	{
-		Card drawn = drawOne();
-		cout << "You drew: " << getShort(drawn) << "\n";
-		if (count < MAX_HAND)hand[count++] = drawn;
-		return;
-	}
-	int idx = -1;
-	try { idx = atoi(input); }
-	catch (...) { idx = -1; }
-	if (idx < 0 || idx >= count) {
-		cout << "Invalid choice - draw 1 card penalty\n";
-		if (count < MAX_HAND)hand[count++] = drawOne();
-		return;
-	}
-
-	Card chosen = hand[idx];
-	if (!canPlay(chosen, discardPile[discardCount - 1])) {
-		cout << "Illegal card- draw 1 card penalty\n";
-		if (count < MAX_HAND)playerHand[count++] = drawOne();
-		return;
-
-	}
-	currentColor = chosen.color;
-	discardPile[discardCount++] = chosen;
-	for (int j = idx; j < count - 1;++j)
-	{
-		hand[j] = hand[j + 1];
-	}
-	count--;
-	cout << "You played: " << getShort(chosen) << "\n";
-	if (count == 0 && !unoFlag) {
-		cout << "You forgot to say UNO! Draw 2 penalty cards.\n";
-		if (count + 2 <= MAX_HAND) {
-			hand[count++] = drawOne();
-			hand[count++] = drawOne();
-		}
-	}
-	unoFlag = false;
-	bool skipNext = false;
-	if (isWildCard(chosen))
-	{
-		cout << "Choose new color (r/g/b/y): ";
-		char ch; cin >> ch; cin.ignore();
-		ch = tolower(ch);
-		if (ch == 'r') currentColor = 0;
-		else if (ch == 'g') currentColor = 1;
-		else if (ch == 'b') currentColor = 2;
-		else if (ch == 'y') currentColor = 3;
-		else currentColor = randomGenerator() % 4;
-		cout << "Color is now " << getColorName(currentColor) << "\n";
-	}
-	int typ = getType(chosen);
-	if (typ == 1) {
-		skipNext = true;
-		cout << "Skip! (your turn again)\n";
-	}
-	else if (typ == 2) {
-		clockwise = !clockwise;
-		cout << "Reverse!\n";
-	}
-	else if (typ == 3)
-	{
-		drawPenalty = 2;
-		skipNext = true;
-		cout << "+2 penalty on yourself!\n";
-	}
-	else if (typ == 5)
-	{
-		drawPenalty = 4;
-		skipNext = true;
-		cout << "Wild +4 penalty on yourself!\n";
-	}	
-	currentPlayer = 1 - currentPlayer;
-
-}
-bool gameOver() {
-	 if (playerCount == 0) {
-        cout << "\n*** PLAYER 1 WINS! ***\n";
-        return true;
-    }
-    if (player2Count == 0) {
-        cout << "\n*** PLAYER 2 WINS! ***\n";
-        return true;
-    }
-    return false;
-}
-bool saveGame(const char* filename) {
+bool saveGame(const char* filename,Card playerHand[], Card player2Hand[], Card drawPile[], Card discardPile[],
+              int& playerCount, int& player2Count, int& drawPileCount, int& discardCount,
+              int& currentColor, int& drawPenalty, int& currentPlayer,
+              bool& saidUno, bool& saidUno2, bool& clockwise,
+              mt19937& randomGenerator) {
 	ofstream f(filename);
 	if (!f)return false;
 	f << drawPenalty << " " << currentColor << " " << clockwise << " " << currentPlayer << " " << saidUno << " " << saidUno2 << "\n";
@@ -342,7 +213,12 @@ bool saveGame(const char* filename) {
 	cout << "Game saved to " << filename << "\n";
 	return true;
 }
-bool loadGame(const char* filename) {
+
+bool loadGame(const char* filename, Card playerHand[], Card player2Hand[], Card drawPile[], Card discardPile[],
+              int& playerCount, int& player2Count, int& drawPileCount, int& discardCount,
+              int& currentColor, int& drawPenalty, int& currentPlayer,
+              bool& saidUno, bool& saidUno2, bool& clockwise,
+              mt19937& randomGenerator) {
 	ifstream f(filename);
 	if (!f) return false;
 	f >> drawPenalty >> currentColor >> clockwise >> currentPlayer >> saidUno >> saidUno2;
@@ -379,6 +255,149 @@ bool loadGame(const char* filename) {
 	cout << "Game loaded from "<< filename<< "\n";
 	return true;
 }
+
+void playerTurn(Card playerHand[], Card player2Hand[], Card drawPile[], Card discardPile[],
+                int& playerCount, int& player2Count, int& drawPileCount, int& discardCount,
+                int& currentColor, int& drawPenalty, int& currentPlayer,
+                bool& saidUno, bool& saidUno2, bool& clockwise)
+{
+    Card* hand = (currentPlayer == 0) ? playerHand : player2Hand;
+    int& count = (currentPlayer == 0) ? playerCount : player2Count;
+    bool& unoFlag = (currentPlayer == 0) ? saidUno : saidUno2;
+
+    cout << "\n--- Player " << (currentPlayer + 1) << " turn ---\n";
+    
+    if (drawPenalty > 0) {
+        cout << "You must draw " << drawPenalty << " cards (penalty)\n";
+        for (int i = 0; i < drawPenalty && count < MAX_HAND; ++i)
+            hand[count++] = drawOne(drawPile, drawPileCount, discardPile, discardCount, randomGenerator);
+        drawPenalty = 0;
+        currentPlayer = 1 - currentPlayer;
+        return;
+    }
+
+    printTop(discardPile, discardCount, currentColor);
+    printHand(hand, count, currentPlayer);
+
+    if (count == 1 && !unoFlag)
+        cout << "You have ONE card left! Type 'uno' before playing!\n";
+
+    while (true) {
+        cout << "Enter index, 'draw', 'uno', 'save', or 'exit': ";
+        string input; 
+        getline(cin, input);
+
+        if (input == "exit") {
+            char saveName[128];
+            cout << "Enter save filename: ";
+            cin.getline(saveName, 128);
+            saveGame(saveName, playerHand, player2Hand, drawPile, discardPile,
+                     playerCount, player2Count, drawPileCount, discardCount,
+                     currentColor, drawPenalty, currentPlayer, saidUno, saidUno2, clockwise);
+            cout << "Game saved. Exiting...\n";
+            exit(0);
+        }
+
+        if (input == "save") {
+            char saveName[128];
+            cout << "Enter save filename: ";
+            cin.getline(saveName, 128);
+            saveGame(saveName, playerHand, player2Hand, drawPile, discardPile,
+                     playerCount, player2Count, drawPileCount, discardCount,
+                     currentColor, drawPenalty, currentPlayer, saidUno, saidUno2, clockwise);
+            cout << "Game saved. Continue...\n";
+            continue;
+        }
+
+        if (input == "uno") {
+            if (count == 1) { unoFlag = true; cout << "UNO called!\n"; }
+            else cout << "You don't have 1 card - ignored.\n";
+            continue;
+        }
+
+        if (input == "draw") {
+            if (count < MAX_HAND) {
+                hand[count++] = drawOne(drawPile, drawPileCount, discardPile, discardCount, randomGenerator);
+                char buf[16]; getShort(hand[count-1], buf);
+                cout << "You drew: " << buf << "\n";
+            }
+            break;
+        }
+
+        if (strIsDigit(input.c_str())) {
+            int idx = stoi(input);
+            if (idx < 0 || idx >= count) {
+                cout << "Invalid choice. Draw 1 card.\n";
+                hand[count++] = drawOne(drawPile, drawPileCount, discardPile, discardCount, randomGenerator);
+                break;
+            }
+
+            Card chosen = hand[idx];
+            if (!canPlay(chosen, discardPile[discardCount-1], currentColor)) {
+                cout << "Illegal card. Draw 1 card.\n";
+                hand[count++] = drawOne(drawPile, drawPileCount, discardPile, discardCount, randomGenerator);
+                break;
+            }
+
+            discardPile[discardCount++] = chosen;
+            currentColor = chosen.color;
+            for (int j = idx; j < count-1; ++j) hand[j] = hand[j+1];
+            count--;
+
+            char buf[16]; getShort(chosen, buf);
+            cout << "You played: " << buf << "\n";
+
+            if (count == 0 && !unoFlag) {
+                cout << "Forgot UNO! Draw 2 penalty.\n";
+                if (count+2 <= MAX_HAND) {
+                    hand[count++] = drawOne(drawPile, drawPileCount, discardPile, discardCount, randomGenerator);
+                    hand[count++] = drawOne(drawPile, drawPileCount, discardPile, discardCount, randomGenerator);
+                }
+            }
+            unoFlag = false;
+
+            switch (chosen.type) {
+                case 1: currentPlayer = 1 - currentPlayer; cout << "Skip!\n"; break;
+                case 2: clockwise = !clockwise; cout << "Reverse!\n"; break;
+                case 3: drawPenalty = 2; currentPlayer = 1 - currentPlayer; cout << "+2 penalty\n"; break;
+                case 5: drawPenalty = 4; currentPlayer = 1 - currentPlayer; cout << "Wild +4 penalty\n"; break;
+                case 4: {
+                    cout << "Choose color (r/g/b/y): ";
+                    char ch; cin >> ch; cin.ignore();
+                    ch = tolower(ch);
+                    currentColor = (ch=='r')?0:(ch=='g')?1:(ch=='b')?2:(ch=='y')?3: randomGenerator()%4;
+                    cout << "Color is now " << getColorName(currentColor) << "\n";
+                    break;
+                }
+            }
+
+            if (chosen.type != 1 && chosen.type != 3 && chosen.type != 5) // skip only for skip/draw2/draw4
+                currentPlayer = 1 - currentPlayer;
+
+            break;
+        }
+
+        cout << "Invalid input.\n";
+    }
+}
+
+
+bool gameOver(int playerCount, int player2Count) {
+	 if (playerCount == 0) {
+        cout << "\n*** PLAYER 1 WINS! ***\n";
+        return true;
+    }
+    if (player2Count == 0) {
+        cout << "\n*** PLAYER 2 WINS! ***\n";
+        return true;
+    }
+    return false;
+}
+
+
+
+
+
 bool chooseSavedGame(char* filename) {
     cout << "Enter save filename (e.g., save1.txt): ";
     cin.getline(filename, 128);
@@ -389,8 +408,13 @@ bool chooseSavedGame(char* filename) {
     }
     return true;
 }
-void newGame() {
-	Deck();
+
+void newGame(Card playerHand[], Card player2Hand[], Card drawPile[], Card discardPile[],
+             int& playerCount, int& player2Count, int& drawPileCount, int& discardCount,
+             int& currentColor, int& drawPenalty, int& currentPlayer,
+             bool& saidUno, bool& saidUno2, bool& clockwise,
+             mt19937& randomGenerator) {
+	createDeck(drawPile, drawPileCount, randomGenerator);
 	playerCount = discardCount = 0;
 	drawPenalty = 0;
 	clockwise = true;
@@ -398,26 +422,43 @@ void newGame() {
 	currentColor = 4;
 	playerCount = player2Count = 0;
 	for (int i = 0; i < 7; ++i) {
-		playerHand[playerCount++] = drawOne();
-		player2Hand[player2Count++] = drawOne();
+		playerHand[playerCount++] = drawOne(drawPile, drawPileCount, discardPile, discardCount, randomGenerator);
+		player2Hand[playerCount++] = drawOne(drawPile, drawPileCount, discardPile, discardCount, randomGenerator);
 	}
-	discardPile[discardCount++] = drawOne();
+	discardPile[discardCount++] = drawOne(drawPile, drawPileCount, discardPile, discardCount, randomGenerator);
 	currentColor = getColor(discardPile[0]);
 	cout << "New game started!\n";
 }
-void gameLoop() {
-	while (!gameOver()) {
-		playerTurn();
+
+void gameLoop(Card playerHand[], Card player2Hand[], Card drawPile[], Card discardPile[],
+              int& playerCount, int& player2Count, int& drawPileCount, int& discardCount,
+              int& currentColor, int& drawPenalty, int& currentPlayer,
+              bool& saidUno, bool& saidUno2, bool& clockwise,
+              mt19937& randomGenerator) {
+	while (!gameOver(playerCount, player2Count)) {
+		playerTurn(playerHand, player2Hand, drawPile, discardPile,
+               playerCount, player2Count, drawPileCount, discardCount,
+               currentColor, drawPenalty, currentPlayer,
+               saidUno, saidUno2, clockwise, randomGenerator);
 	}
 }
+
 int main() {
-#ifdef _WIN32
-	HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
-	DWORD dwMode = 0;
-	GetConsoleMode(hOut, &dwMode);
-	dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
-	SetConsoleMode(hOut, dwMode);
-#endif
+	int drawPileCount = 0;
+	int discardCount = 0;
+	int playerCount = 0;
+	int currentColor = 4;
+	bool clockwise = true;
+	int drawPenalty = 0;
+	int currentPlayer = 0;
+	int player2Count = 0;
+	bool saidUno2 = false;
+	bool saidUno = false;
+	Card drawPile[DECK_SIZE];
+	Card discardPile[MAX_DISCARD];
+	Card playerHand[MAX_HAND];
+	Card player2Hand[MAX_HAND];
+
 	cout << "--- UNO Game ---\n";
 	while (true) {
 		cout << "1.New game\n2.Continue Saved Game\n3.Save & Exit\n4.Exit\n";
@@ -425,13 +466,30 @@ int main() {
 		cin >> choice;
 		cin.ignore();
 		if (choice == 1) {
-			newGame();
-			gameLoop();
+			newGame(playerHand, player2Hand, drawPile, discardPile,
+        playerCount, player2Count, drawPileCount, discardCount,
+        currentColor, drawPenalty, currentPlayer,
+        saidUno, saidUno2, clockwise,
+        randomGenerator);
+			gameLoop(playerHand, player2Hand, drawPile, discardPile,
+         playerCount, player2Count, drawPileCount, discardCount,
+         currentColor, drawPenalty, currentPlayer,
+         saidUno, saidUno2, clockwise,
+         randomGenerator);
 		}
 		else if (choice == 2) {
 			char filename[128];
 			if (chooseSavedGame(filename)) {
-				if (loadGame(filename)) gameLoop();
+				if (loadGame(filename,
+             playerHand, player2Hand, drawPile, discardPile,
+             playerCount, player2Count, drawPileCount, discardCount,
+             currentColor, drawPenalty, currentPlayer,
+             saidUno, saidUno2, clockwise,
+             randomGenerator)) gameLoop(playerHand, player2Hand, drawPile, discardPile,
+                            playerCount, player2Count, drawPileCount, discardCount,
+                            currentColor, drawPenalty, currentPlayer,
+                            saidUno, saidUno2, clockwise,
+                            randomGenerator);
 			} else {
 				cout << "No saved game found.\n";
 			}			
@@ -440,7 +498,12 @@ int main() {
 			char saveName[128];
 			cout << "Enter save filename: ";
 			cin.getline(saveName, 128);
-			saveGame(saveName);
+			saveGame(saveName, playerHand, player2Hand, drawPile, discardPile,
+         playerCount, player2Count, drawPileCount, discardCount,
+         currentColor, drawPenalty, currentPlayer,
+         saidUno, saidUno2, clockwise,
+         randomGenerator);
+
 			cout << "Game saved. Exiting...\n";
 			break;
 		}
