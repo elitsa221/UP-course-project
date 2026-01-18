@@ -40,8 +40,6 @@ int drawPenalty = 0;
 int currentPlayer = 0;
 int player2Count = 0;
 bool saidUno2 = false;
-Card player2Hand[MAX_HAND];
-//
 bool saidUno = false;
 struct Card {
 	int color;
@@ -51,6 +49,8 @@ struct Card {
 Card drawPile[DECK_SIZE];
 Card discardPile[MAX_DISCARD];
 Card playerHand[MAX_HAND];
+//
+Card player2Hand[MAX_HAND];
 int getColor(const Card& c) {
 	return c.color;
 }
