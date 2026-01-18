@@ -338,7 +338,7 @@ bool saveGame() {
 bool loadGame() {
 	ifstream f(SAVE_FILE);
 	if (!f) return false;
-	f >> drawPenalty >> currentColor >> clockwise >> saidUno;
+	f >> drawPenalty >> currentColor >> clockwise >> currentPlayer >> saidUno >> saidUno2;
 	f >> playerCount;
 	for (int i = 0; i < playerCount; ++i) {
 		int c, t, v;
@@ -346,7 +346,14 @@ bool loadGame() {
 		playerHand[i].color = c;
 		playerHand[i].type = t;
 		playerHand[i].value = v;
-	} f >> discardCount;
+	}
+	 f >> player2Count;
+    for (int i = 0; i < player2Count; ++i) {
+        f >> player2Hand[i].color
+          >> player2Hand[i].type
+          >> player2Hand[i].value;
+    }
+	f >> discardCount;
 	for (int i = 0; i < discardCount; ++i) {
 		int c, t, v;
 		f >> c >> t >> v;
