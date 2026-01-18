@@ -212,9 +212,12 @@ void playerTurn()
 	char input[32];
 	cin.getline(input, sizeof(input));
 	if (strcmp(input, "exit") == 0) {
-    saveGame();
-    cout << "Game saved. Exiting...\n";
-    exit(0);}
+		char saveName[128];
+		cout << "Enter save filename: ";
+		cin.getline(saveName, 128);
+		saveGame(saveName);
+		cout << "Game saved. Exiting...\n";
+		exit(0);}
 	if (strcmp(input, "save") == 0) {
 		char saveName[128];
 		cout << "Enter save filename: ";
@@ -434,10 +437,15 @@ int main() {
 			}			
 		}
 		else if (choice == 3) {
-			saveGame();
+			char saveName[128];
+			cout << "Enter save filename: ";
+			cin.getline(saveName, 128);
+			saveGame(saveName);
+			cout << "Game saved. Exiting...\n";
 			break;
 		}
 		else if (choice == 4) {
+			cout << "Exiting without saving...\n";
 			break;
 		}
 	}
