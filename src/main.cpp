@@ -26,6 +26,7 @@
 
 using namespace std;
 const int DECK_SIZE = 108;
+bool saveGame();
 const int MAX_HAND = 30;
 const int MAX_DISCARD = DECK_SIZE;
 const char* SAVE_FILE = "uno_game.txt";
