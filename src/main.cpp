@@ -321,9 +321,13 @@ bool gameOver() {
 bool saveGame() {
 	ofstream f(SAVE_FILE);
 	if (!f)return false;
-	f << drawPenalty << " " << currentColor << " " << clockwise << " " << saidUno << "\n";
+	f << drawPenalty << " " << currentColor << " " << clockwise << " " << currentPlayer << " " << saidUno << " " << saidUno2 << "\n";
 	f << playerCount << "\n";
-	for (int i = 0; i < playerCount;++i)f << playerHand[i].color << " " << playerHand[i].type << " " << playerHand[i].value << "\n";
+	for (int i = 0; i < playerCount;++i)
+	f << playerHand[i].color << " " << playerHand[i].type << " " << playerHand[i].value << "\n";
+	f << player2Count << "\n";
+    for (int i = 0; i < player2Count; ++i)
+    f << player2Hand[i].color << " "<< player2Hand[i].type << " "<< player2Hand[i].value << "\n";
 	f << discardCount << "\n";
 	for (int i = 0;i < discardCount;++i)f << discardPile[i].color << " " << discardPile[i].type << " " << discardPile[i].value << "\n";
 	f << drawPileCount << "\n";
