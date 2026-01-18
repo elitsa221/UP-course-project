@@ -216,9 +216,13 @@ void playerTurn()
     cout << "Game saved. Exiting...\n";
     exit(0);}
 	if (strcmp(input, "save") == 0) {
-    saveGame();
-    cout << "Game saved. Continuing...\n";
-    return;
+		char saveName[128];
+		cout << "Enter save filename: ";
+		cin.getline(saveName, 128);
+		saveGame(saveName);
+		cout << "Game saved. Continuing...\n";
+		playerTurn();
+		return;
 	}
 	if (strcmp(input, "uno") == 0) {
 		if (count == 1) {
@@ -318,8 +322,8 @@ bool gameOver() {
     }
     return false;
 }
-bool saveGame() {
-	ofstream f(SAVE_FILE);
+bool saveGame(const char* filename) {
+	ofstream f(filename);
 	if (!f)return false;
 	f << drawPenalty << " " << currentColor << " " << clockwise << " " << currentPlayer << " " << saidUno << " " << saidUno2 << "\n";
 	f << playerCount << "\n";
@@ -332,11 +336,11 @@ bool saveGame() {
 	for (int i = 0;i < discardCount;++i)f << discardPile[i].color << " " << discardPile[i].type << " " << discardPile[i].value << "\n";
 	f << drawPileCount << "\n";
 	for (int i = 0;i < drawPileCount;++i)f << drawPile[i].color << " " << drawPile[i].type << " " << drawPile[i].value << "\n";
-	cout << "Game saved.\n";
+	cout << "Game saved to " << filename << "\n";
 	return true;
 }
-bool loadGame() {
-	ifstream f(SAVE_FILE);
+bool loadGame(const char* filename) {
+	ifstream f(filename);
 	if (!f) return false;
 	f >> drawPenalty >> currentColor >> clockwise >> currentPlayer >> saidUno >> saidUno2;
 	f >> playerCount;
@@ -369,8 +373,18 @@ bool loadGame() {
 		drawPile[i].type = t;
 		drawPile[i].value = v;
 	}
-	cout << "Game loaded.\n";
+	cout << "Game loaded from "<< filename<< "\n";
 	return true;
+}
+bool chooseSavedGame(char* filename) {
+    cout << "Enter save filename (e.g., save1.txt): ";
+    cin.getline(filename, 128);
+    ifstream f(filename);
+    if (!f) {
+        cout << "File not found.\n";
+        return false;
+    }
+    return true;
 }
 void newGame() {
 	Deck();
@@ -412,9 +426,12 @@ int main() {
 			gameLoop();
 		}
 		else if (choice == 2) {
-			if (loadGame())gameLoop();
-			else cout << "No saved game found.";
-
+			char filename[128];
+			if (chooseSavedGame(filename)) {
+				if (loadGame(filename)) gameLoop();
+			} else {
+				cout << "No saved game found.\n";
+			}			
 		}
 		else if (choice == 3) {
 			saveGame();
