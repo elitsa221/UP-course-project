@@ -198,6 +198,15 @@ bool gameOver(int playerCount, int player2Count) {
     if(player2Count==0){cout<<"\n*** PLAYER 2 WINS! ***\n"; return true;}
     return false;
 }
+bool isEqual(const char* a, const char* b) {
+    int i = 0;
+    while(a[i] != '\0' && b[i] != '\0') {
+        if(a[i] != b[i]) return false;
+        i++;
+    }
+    return a[i] == b[i];
+}
+
 void playerTurn(Card playerHand[], Card player2Hand[], Card drawPile[], Card discardPile[],
                 int& playerCount, int& player2Count, int& drawPileCount, int& discardCount,
                 int& currentColor, int& drawPenalty, int& currentPlayer,
@@ -229,7 +238,7 @@ void playerTurn(Card playerHand[], Card player2Hand[], Card drawPile[], Card dis
         cout << "Enter index, 'draw', 'uno', 'save', or 'exit': ";
         char input[128];
         cin.getline(input,128);
-        if(input=="exit"){
+        if(isEqual(input, "exit")){
             char saveName[128];
             cout << "Enter save filename: ";
             cin.getline(saveName,128);
@@ -240,7 +249,7 @@ void playerTurn(Card playerHand[], Card player2Hand[], Card drawPile[], Card dis
             exit(0);
         }
 
-        if(input=="save"){
+        if(isEqual(input, "save")){
             char saveName[128];
             cout << "Enter save filename: ";
             cin.getline(saveName,128);
@@ -251,13 +260,13 @@ void playerTurn(Card playerHand[], Card player2Hand[], Card drawPile[], Card dis
             continue;
         }
 
-        if(input=="uno"){
+        if(isEqual(input, "uno")){
             if(count==1){unoFlag=true; cout<<"UNO called!\n";}
             else cout<<"You don't have 1 card - ignored.\n";
             continue;
         }
 
-        if(input=="draw"){
+        if(isEqual(input, "draw")){
             if(count<MAX_HAND){
                 hand[count++] = drawOne(drawPile, drawPileCount, discardPile, discardCount, rng);
                 char buf[16]; getShort(hand[count-1], buf);
