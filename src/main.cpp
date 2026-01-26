@@ -227,9 +227,8 @@ void playerTurn(Card playerHand[], Card player2Hand[], Card drawPile[], Card dis
 
     while(true){
         cout << "Enter index, 'draw', 'uno', 'save', or 'exit': ";
-        string input;
-        getline(cin,input);
-
+        char input[128];
+        cin.getline(input,128);
         if(input=="exit"){
             char saveName[128];
             cout << "Enter save filename: ";
@@ -267,8 +266,13 @@ void playerTurn(Card playerHand[], Card player2Hand[], Card drawPile[], Card dis
             break;
         }
 
-        if(strIsDigit(input.c_str())){
-            int idx = stoi(input);
+        if(strIsDigit(input)){
+            int idx =0;
+            for (int i = 0; input[i] != '\0'; i++)
+            {
+                idx = idx *10 + (input[i] -'0');
+            }
+            
             if(idx<0 || idx>=count){
                 cout << "Invalid choice. Draw 1 card.\n";
                 hand[count++] = drawOne(drawPile, drawPileCount, discardPile, discardCount, rng);
